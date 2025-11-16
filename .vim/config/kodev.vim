@@ -11,7 +11,7 @@ set t_Co=256
 set termguicolors
 
 " Set leader key
-let mapleader = " "
+" let mapleader = " "
 
 " Custom commands 
 command! -nargs=* Vs vsplit <args> | wincmd l

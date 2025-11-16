@@ -94,6 +94,81 @@ else
 fi
 
 # -----------------------------------------------------------------------------
+# nnn file manager setup (for nnn.vim integration)
+# -----------------------------------------------------------------------------
+echo ""
+echo "🔍 Checking for nnn file manager..."
+
+if command -v nnn >/dev/null 2>&1; then
+  echo "✅ nnn already installed: $(nnn -V 2>&1 | head -n 1)"
+else
+  echo "📦 Installing nnn (file manager)..."
+  sudo apt-get update -qq
+  sudo apt-get install -y nnn >/dev/null
+  echo "🎉 nnn installed successfully: $(nnn -V 2>&1 | head -n 1)"
+fi
+
+# -----------------------------------------------------------------------------
+# fd-find setup (optional, for better nnn plugin performance)
+# -----------------------------------------------------------------------------
+echo ""
+echo "🔍 Checking for fd (fd-find)..."
+
+if command -v fd >/dev/null 2>&1 || command -v fdfind >/dev/null 2>&1; then
+  echo "✅ fd already installed"
+else
+  echo "📦 Installing fd-find (fast file finder)..."
+  sudo apt-get update -qq
+  sudo apt-get install -y fd-find >/dev/null
+
+  # Create symlink if fd is installed as fdfind (Ubuntu naming)
+  if command -v fdfind >/dev/null 2>&1 && ! command -v fd >/dev/null 2>&1; then
+    mkdir -p ~/.local/bin
+    ln -sf $(which fdfind) ~/.local/bin/fd
+    echo "   🔗 Created symlink: fd -> fdfind"
+  fi
+
+  echo "✅ fd-find installed successfully"
+fi
+
+# -----------------------------------------------------------------------------
+# nnn plugins setup
+# -----------------------------------------------------------------------------
+echo ""
+echo "🔍 Checking for nnn plugins..."
+
+if [ -d ~/.config/nnn/plugins ] && [ "$(ls -A ~/.config/nnn/plugins 2>/dev/null)" ]; then
+  echo "✅ nnn plugins already installed at ~/.config/nnn/plugins/"
+else
+  echo "📦 Setting up nnn plugins..."
+  mkdir -p ~/.config/nnn/plugins
+
+  # Download official nnn plugins
+  curl -Ls https://raw.githubusercontent.com/jarun/nnn/master/plugins/getplugs | sh >/dev/null 2>&1
+  echo "🎉 nnn plugins installed to ~/.config/nnn/plugins/"
+fi
+
+# -----------------------------------------------------------------------------
+# nnn .bashrc configuration
+# -----------------------------------------------------------------------------
+echo ""
+echo "🔍 Checking nnn configuration in ~/.bashrc..."
+
+add_nnn_config() {
+  if ! grep -q "NNN_PLUG=" ~/.bashrc 2>/dev/null; then
+    echo "" >> ~/.bashrc
+    echo "# nnn file manager configuration" >> ~/.bashrc
+    echo "export NNN_PLUG='f:finder;d:fzcd;o:fzopen'" >> ~/.bashrc
+    echo "export NNN_OPENER='vim'" >> ~/.bashrc
+    echo "   📁 Added nnn configuration to ~/.bashrc"
+  else
+    echo "   ✅ nnn configuration already in ~/.bashrc"
+  fi
+}
+
+add_nnn_config
+
+# -----------------------------------------------------------------------------
 # Node.js setup (for coc.nvim and other dev tools)
 # -----------------------------------------------------------------------------
 echo ""
@@ -160,6 +235,8 @@ echo ""
 echo "🎯 Vim environment setup complete!"
 echo "   - fzf: $(fzf --version 2>/dev/null || echo 'not found')"
 echo "   - rg: $(rg --version | head -n 1 2>/dev/null || echo 'not found')"
+echo "   - nnn: $(nnn -V 2>&1 | head -n 1 2>/dev/null || echo 'not found')"
+echo "   - fd: $(fd --version 2>/dev/null | head -n 1 || fdfind --version 2>/dev/null | head -n 1 || echo 'not found')"
 echo "   - node: $(node -v 2>/dev/null || echo 'not found')"
 echo "   - sqlcmd: $(sqlcmd -? 2>/dev/null | head -n 1 || echo 'not found')"
 
