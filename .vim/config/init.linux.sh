@@ -132,6 +132,42 @@ else
 fi
 
 # -----------------------------------------------------------------------------
+# code-minimap setup (for minimap.vim plugin)
+# -----------------------------------------------------------------------------
+echo ""
+echo "🔍 Checking for code-minimap..."
+
+if command -v code-minimap >/dev/null 2>&1; then
+  echo "✅ code-minimap already installed: $(code-minimap --version 2>/dev/null | head -n 1)"
+else
+  echo "📦 Installing code-minimap (minimap binary for vim)..."
+
+  # Create ~/.local/bin if it doesn't exist
+  mkdir -p ~/.local/bin
+
+  # Download and install pre-built binary
+  MINIMAP_VERSION="v0.6.4"
+  MINIMAP_URL="https://github.com/wfxr/code-minimap/releases/download/${MINIMAP_VERSION}/code-minimap-${MINIMAP_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+
+  cd /tmp
+  curl -sL "$MINIMAP_URL" -o code-minimap.tar.gz
+  tar -xzf code-minimap.tar.gz --strip-components=1
+  mv code-minimap ~/.local/bin/
+  rm code-minimap.tar.gz
+
+  # Ensure ~/.local/bin is in PATH
+  if ! echo "$PATH" | grep -q "$HOME/.local/bin"; then
+    if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.bashrc 2>/dev/null; then
+      echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+      echo "   📁 Added ~/.local/bin to PATH in ~/.bashrc"
+    fi
+    export PATH="$HOME/.local/bin:$PATH"
+  fi
+
+  echo "✅ code-minimap installed successfully: $(code-minimap --version 2>/dev/null | head -n 1)"
+fi
+
+# -----------------------------------------------------------------------------
 # nnn plugins setup
 # -----------------------------------------------------------------------------
 echo ""
@@ -167,6 +203,67 @@ add_nnn_config() {
 }
 
 add_nnn_config
+
+# -----------------------------------------------------------------------------
+# vim cd-on-exit wrapper function
+# -----------------------------------------------------------------------------
+echo ""
+echo "🔍 Checking vim cd-on-exit wrapper in ~/.bashrc..."
+
+add_vim_cd_wrapper() {
+  if ! grep -q "# vim cd-on-exit wrapper" ~/.bashrc 2>/dev/null; then
+    echo "" >> ~/.bashrc
+    echo "# vim cd-on-exit wrapper" >> ~/.bashrc
+    echo "vim() {" >> ~/.bashrc
+    echo "    /usr/bin/vim \"\$@\"" >> ~/.bashrc
+    echo "    if [ -f ~/.config/vim/.lastd ]; then" >> ~/.bashrc
+    echo "        source ~/.config/vim/.lastd" >> ~/.bashrc
+    echo "        rm -f ~/.config/vim/.lastd" >> ~/.bashrc
+    echo "    fi" >> ~/.bashrc
+    echo "}" >> ~/.bashrc
+    echo "   📁 Added vim cd-on-exit wrapper to ~/.bashrc"
+  else
+    echo "   ✅ vim cd-on-exit wrapper already in ~/.bashrc"
+  fi
+}
+
+add_vim_cd_wrapper
+
+# -----------------------------------------------------------------------------
+# nnn cd-on-exit wrapper function
+# -----------------------------------------------------------------------------
+echo ""
+echo "🔍 Checking nnn cd-on-exit wrapper in ~/.bashrc..."
+
+add_nnn_cd_wrapper() {
+  if ! grep -q "# nnn cd-on-exit wrapper" ~/.bashrc 2>/dev/null; then
+    echo "" >> ~/.bashrc
+    echo "# nnn cd-on-exit wrapper" >> ~/.bashrc
+    echo "export NNN_TMPFILE=\"\${XDG_CONFIG_HOME:-\$HOME/.config}/nnn/.lastd\"" >> ~/.bashrc
+    echo "" >> ~/.bashrc
+    echo "nnn() {" >> ~/.bashrc
+    echo "    # Block nesting of nnn in subshells" >> ~/.bashrc
+    echo "    if [ -n \$NNNLVL ] && [ \"\${NNNLVL:-0}\" -ge 1 ]; then" >> ~/.bashrc
+    echo "        echo \"nnn is already running\"" >> ~/.bashrc
+    echo "        return" >> ~/.bashrc
+    echo "    fi" >> ~/.bashrc
+    echo "" >> ~/.bashrc
+    echo "    export NNN_TMPFILE=\"\${XDG_CONFIG_HOME:-\$HOME/.config}/nnn/.lastd\"" >> ~/.bashrc
+    echo "" >> ~/.bashrc
+    echo "    command nnn \"\$@\"" >> ~/.bashrc
+    echo "" >> ~/.bashrc
+    echo "    if [ -f \"\$NNN_TMPFILE\" ]; then" >> ~/.bashrc
+    echo "        source \"\$NNN_TMPFILE\"" >> ~/.bashrc
+    echo "        rm -f \"\$NNN_TMPFILE\"" >> ~/.bashrc
+    echo "    fi" >> ~/.bashrc
+    echo "}" >> ~/.bashrc
+    echo "   📁 Added nnn cd-on-exit wrapper to ~/.bashrc"
+  else
+    echo "   ✅ nnn cd-on-exit wrapper already in ~/.bashrc"
+  fi
+}
+
+add_nnn_cd_wrapper
 
 # -----------------------------------------------------------------------------
 # Node.js setup (for coc.nvim and other dev tools)
@@ -237,6 +334,7 @@ echo "   - fzf: $(fzf --version 2>/dev/null || echo 'not found')"
 echo "   - rg: $(rg --version | head -n 1 2>/dev/null || echo 'not found')"
 echo "   - nnn: $(nnn -V 2>&1 | head -n 1 2>/dev/null || echo 'not found')"
 echo "   - fd: $(fd --version 2>/dev/null | head -n 1 || fdfind --version 2>/dev/null | head -n 1 || echo 'not found')"
+echo "   - code-minimap: $(code-minimap --version 2>/dev/null | head -n 1 || echo 'not found')"
 echo "   - node: $(node -v 2>/dev/null || echo 'not found')"
 echo "   - sqlcmd: $(sqlcmd -? 2>/dev/null | head -n 1 || echo 'not found')"
 

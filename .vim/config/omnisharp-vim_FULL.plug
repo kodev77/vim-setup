@@ -19,11 +19,10 @@ Plug 'prabirshrestha/asyncomplete.vim'
 
 " Colorscheme
 Plug 'gruvbox-community/gruvbox'
+Plug 'tomasiser/vim-code-dark'
 
-" Statusline
-Plug 'itchyny/lightline.vim'
-Plug 'shinchu/lightline-gruvbox.vim'
-Plug 'maximbaz/lightline-ale'
+" Statusline - using vim-airline (configured in statusbar.vim)
+" lightline plugins removed in favor of vim-airline
 
 " Snippet support
 if s:using_snippets
