@@ -230,42 +230,6 @@ add_vim_cd_wrapper() {
 add_vim_cd_wrapper
 
 # -----------------------------------------------------------------------------
-# nnn cd-on-exit wrapper function
-# -----------------------------------------------------------------------------
-echo ""
-echo "🔍 Checking nnn cd-on-exit wrapper in ~/.bashrc..."
-
-add_nnn_cd_wrapper() {
-  if ! grep -q "# nnn cd-on-exit wrapper" ~/.bashrc 2>/dev/null; then
-    echo "" >> ~/.bashrc
-    echo "# nnn cd-on-exit wrapper" >> ~/.bashrc
-    echo "export NNN_TMPFILE=\"\${XDG_CONFIG_HOME:-\$HOME/.config}/nnn/.lastd\"" >> ~/.bashrc
-    echo "" >> ~/.bashrc
-    echo "nnn() {" >> ~/.bashrc
-    echo "    # Block nesting of nnn in subshells" >> ~/.bashrc
-    echo "    if [ -n \$NNNLVL ] && [ \"\${NNNLVL:-0}\" -ge 1 ]; then" >> ~/.bashrc
-    echo "        echo \"nnn is already running\"" >> ~/.bashrc
-    echo "        return" >> ~/.bashrc
-    echo "    fi" >> ~/.bashrc
-    echo "" >> ~/.bashrc
-    echo "    export NNN_TMPFILE=\"\${XDG_CONFIG_HOME:-\$HOME/.config}/nnn/.lastd\"" >> ~/.bashrc
-    echo "" >> ~/.bashrc
-    echo "    command nnn \"\$@\"" >> ~/.bashrc
-    echo "" >> ~/.bashrc
-    echo "    if [ -f \"\$NNN_TMPFILE\" ]; then" >> ~/.bashrc
-    echo "        source \"\$NNN_TMPFILE\"" >> ~/.bashrc
-    echo "        rm -f \"\$NNN_TMPFILE\"" >> ~/.bashrc
-    echo "    fi" >> ~/.bashrc
-    echo "}" >> ~/.bashrc
-    echo "   📁 Added nnn cd-on-exit wrapper to ~/.bashrc"
-  else
-    echo "   ✅ nnn cd-on-exit wrapper already in ~/.bashrc"
-  fi
-}
-
-add_nnn_cd_wrapper
-
-# -----------------------------------------------------------------------------
 # Microsoft Repository Setup (shared for .NET SDK and SQL tools)
 # -----------------------------------------------------------------------------
 setup_microsoft_repo() {

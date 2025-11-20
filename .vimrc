@@ -73,6 +73,15 @@ function! s:CloseMinimapInDiff()
     endif
 endfunction
 
+" -----------------------------------------------------------------------------
+" Disable nnn cd-on-exit to prevent E684 errors
+" -----------------------------------------------------------------------------
+" Delete .lastd file when nnn opens to prevent buggy callback from running
+augroup NnnDisableCdOnExit
+    au!
+    au FileType nnn silent! call delete(expand('~/.config/nnn/.lastd'))
+augroup END
+
 " Helper mapping to clear search highlights (minimap + vim)
 " Using <leader>nh since <leader>n opens nnn file manager
 nnoremap <silent> <leader>nh :nohlsearch<CR>:call minimap#vim#ClearColorSearch()<CR>
