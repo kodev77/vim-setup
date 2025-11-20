@@ -266,6 +266,28 @@ add_nnn_cd_wrapper() {
 add_nnn_cd_wrapper
 
 # -----------------------------------------------------------------------------
+# Microsoft Repository Setup (shared for .NET SDK and SQL tools)
+# -----------------------------------------------------------------------------
+setup_microsoft_repo() {
+  if [ ! -f /usr/share/keyrings/microsoft.gpg ]; then
+    echo ""
+    echo "➕ Setting up Microsoft package repository..."
+
+    # Download and install Microsoft GPG key
+    curl -sSL https://packages.microsoft.com/keys/microsoft.asc | \
+      gpg --dearmor | sudo tee /usr/share/keyrings/microsoft.gpg > /dev/null
+
+    # Add Microsoft repository for Ubuntu version
+    UBUNTU_VERSION=$(lsb_release -rs)
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/ubuntu/${UBUNTU_VERSION}/prod noble main" | \
+      sudo tee /etc/apt/sources.list.d/microsoft.list > /dev/null
+
+    sudo apt-get update -qq
+    echo "✅ Microsoft repository configured"
+  fi
+}
+
+# -----------------------------------------------------------------------------
 # Node.js setup (for coc.nvim and other dev tools)
 # -----------------------------------------------------------------------------
 echo ""
@@ -278,6 +300,26 @@ else
   curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - >/dev/null
   sudo apt-get install -y nodejs >/dev/null
   echo "✅ Node.js installed: $(node -v)"
+fi
+
+# -----------------------------------------------------------------------------
+# .NET SDK setup (for OmniSharp and C# development)
+# -----------------------------------------------------------------------------
+echo ""
+echo "🔍 Checking for .NET SDK..."
+
+if command -v dotnet >/dev/null 2>&1; then
+  echo "✅ .NET SDK detected: $(dotnet --version)"
+else
+  echo "📦 Installing .NET 8.0 SDK..."
+
+  # Ensure Microsoft repository is configured
+  setup_microsoft_repo
+
+  # Install .NET 8.0 SDK
+  sudo apt-get install -y dotnet-sdk-8.0 >/dev/null
+
+  echo "✅ .NET SDK installed: $(dotnet --version)"
 fi
 
 # -----------------------------------------------------------------------------
@@ -304,22 +346,9 @@ if command -v sqlcmd >/dev/null 2>&1 || [ -x /opt/mssql-tools18/bin/sqlcmd ]; th
 else
   echo "📦 Installing mssql-tools18..."
 
-  sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list || true
+  # Ensure Microsoft repository is configured
+  setup_microsoft_repo
 
-  if [ ! -f /etc/apt/sources.list.d/mssql-release.list ]; then
-    echo "➕ Adding Microsoft SQL Server repository..."
-
-    # Create Microsoft GPG keyring (modern, apt-key deprecated)
-    curl -sSL https://packages.microsoft.com/keys/microsoft.asc | \
-      gpg --dearmor | sudo tee /usr/share/keyrings/microsoft.gpg > /dev/null
-
-    # Add Microsoft repository with signed-by option for Ubuntu version
-    UBUNTU_VERSION=$(lsb_release -rs)
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/ubuntu/${UBUNTU_VERSION}/prod noble main" | \
-      sudo tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
-  fi
-
-  sudo apt-get update -qq
   sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev >/dev/null
   add_sqlcmd_path
   echo "✅ sqlcmd installed successfully."
@@ -336,5 +365,6 @@ echo "   - nnn: $(nnn -V 2>&1 | head -n 1 2>/dev/null || echo 'not found')"
 echo "   - fd: $(fd --version 2>/dev/null | head -n 1 || fdfind --version 2>/dev/null | head -n 1 || echo 'not found')"
 echo "   - code-minimap: $(code-minimap --version 2>/dev/null | head -n 1 || echo 'not found')"
 echo "   - node: $(node -v 2>/dev/null || echo 'not found')"
+echo "   - dotnet: $(dotnet --version 2>/dev/null || echo 'not found')"
 echo "   - sqlcmd: $(sqlcmd -? 2>/dev/null | head -n 1 || echo 'not found')"
 
