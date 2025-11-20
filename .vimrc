@@ -53,11 +53,25 @@ source ~/.vim/config/statusbar.vim
 " Minimap configuration (minimap.vim)
 " -----------------------------------------------------------------------------
 let g:minimap_width = 10
-let g:minimap_auto_start = 1
+let g:minimap_auto_start = 0
 let g:minimap_auto_start_win_enter = 1
 let g:minimap_highlight_search = 1
 let g:minimap_highlight_range = 1
 let g:minimap_git_colors = 1
+
+" Minimap <-> Fugitive Fix
+" Do not auto-open minimap on diff windows or in fugitive buffers
+augroup MinimapFugitiveFix
+    au!
+    au BufWinEnter * call s:CloseMinimapInDiff()
+    au BufEnter fugitive://* silent! MinimapClose
+augroup END
+
+function! s:CloseMinimapInDiff()
+    if &diff && exists(':MinimapClose')
+        MinimapClose
+    endif
+endfunction
 
 " Helper mapping to clear search highlights (minimap + vim)
 " Using <leader>nh since <leader>n opens nnn file manager
